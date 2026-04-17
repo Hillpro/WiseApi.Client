@@ -50,8 +50,8 @@ public abstract class Profile
     /// <summary>Unique identifier for the profile.</summary>
     public long Id { get; init; }
 
-    /// <summary>Publicly accessible identifier.</summary>
-    public string? PublicId { get; init; }
+    /// <summary>Publicly accessible identifier. Wise always returns a UUID here.</summary>
+    public Guid? PublicId { get; init; }
 
     /// <summary>The user ID that owns this profile.</summary>
     public long UserId { get; init; }

@@ -23,10 +23,11 @@ public sealed class AuthenticationHandlerTests
     }
 
     [Fact]
-    public async Task Preserves_caller_supplied_authorization_header()
+    public async Task Preserves_caller_supplied_authorization_and_skips_credentials_provider()
     {
         var stub = new StubHttpMessageHandler().EnqueueJson("{}");
-        var handler = new WiseAuthenticationHandler(new ApiTokenCredentialsProvider("default-token")) { InnerHandler = stub };
+        var credentials = new CountingCredentialsProvider("default-token");
+        var handler = new WiseAuthenticationHandler(credentials) { InnerHandler = stub };
         using var http = new HttpClient(handler) { BaseAddress = new Uri("https://api.wise-sandbox.com") };
 
         using var request = new HttpRequestMessage(HttpMethod.Get, new Uri("/v2/profiles", UriKind.Relative));
@@ -35,5 +36,20 @@ public sealed class AuthenticationHandlerTests
 
         var recorded = Assert.Single(stub.Requests);
         Assert.Equal("Bearer override-token", recorded.Headers["Authorization"]);
+        Assert.Equal(0, credentials.CallCount);
+    }
+
+    private sealed class CountingCredentialsProvider : IWiseCredentialsProvider
+    {
+        private readonly string _token;
+        public int CallCount { get; private set; }
+
+        public CountingCredentialsProvider(string token) => _token = token;
+
+        public ValueTask<string> GetAccessTokenAsync(CancellationToken cancellationToken = default)
+        {
+            CallCount++;
+            return ValueTask.FromResult(_token);
+        }
     }
 }

@@ -43,23 +43,18 @@ internal sealed class LenientDateTimeOffsetConverter : JsonConverter<DateTimeOff
             return default;
         }
 
-        if (reader.TryGetDateTimeOffset(out var value))
+        // Note: we skip STJ's built-in TryGetDateTimeOffset because it assumes *local* time
+        // for strings without an offset (e.g. "2023-01-15T10:30:00")
+        const DateTimeStyles Styles = DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal;
+
+        if (DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, Styles, out var value))
         {
             return value;
         }
 
-        if (DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out value))
-        {
-            return value;
-        }
-
+        // Last-ditch: normalize the Wise-specific compact offset form "+0000" → "+00:00".
         var normalized = NormalizeCompactOffset(text);
-        if (DateTimeOffset.TryParseExact(
-                normalized,
-                AcceptedFormats,
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-                out value))
+        if (DateTimeOffset.TryParseExact(normalized, AcceptedFormats, CultureInfo.InvariantCulture, Styles, out value))
         {
             return value;
         }

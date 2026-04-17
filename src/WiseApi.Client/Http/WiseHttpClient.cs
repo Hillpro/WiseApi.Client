@@ -133,13 +133,21 @@ public sealed partial class WiseHttpClient
                 await ThrowFromFailureAsync(response, request, cancellationToken).ConfigureAwait(false);
             }
 
-            if (response.StatusCode == HttpStatusCode.NoContent || response.Content.Headers.ContentLength == 0)
+            if (response.StatusCode == HttpStatusCode.NoContent)
             {
                 return default!;
             }
 
-            var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            var result = await JsonSerializer.DeserializeAsync<TResponse>(stream, WiseJsonDefaults.Options, cancellationToken).ConfigureAwait(false);
+            // ReadAsByteArrayAsync materializes the body once — which also collapses the
+            // chunked-vs-Content-Length-vs-explicit-empty cases into a single length check.
+            // Wise responses are small JSON payloads, so the streaming loss is negligible.
+            var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+            if (bytes.Length == 0)
+            {
+                return default!;
+            }
+
+            var result = JsonSerializer.Deserialize<TResponse>(bytes, WiseJsonDefaults.Options);
             return result!;
         }
         finally
