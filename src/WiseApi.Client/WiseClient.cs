@@ -17,14 +17,16 @@ public sealed class WiseClient : IWiseClient, IDisposable
     /// <summary>Create a new <see cref="WiseClient"/> from its service dependencies.</summary>
     public WiseClient(
         IProfilesApi profiles,
+        IMultiCurrencyAccountsApi multiCurrencyAccounts,
         IBalancesApi balances,
         IBalanceMovementsApi balanceMovements,
         IQuotesApi quotes,
         IRatesApi rates)
-        : this(profiles, balances, balanceMovements, quotes, rates, owned: null) { }
+        : this(profiles, multiCurrencyAccounts, balances, balanceMovements, quotes, rates, owned: null) { }
 
     private WiseClient(
         IProfilesApi profiles,
+        IMultiCurrencyAccountsApi multiCurrencyAccounts,
         IBalancesApi balances,
         IBalanceMovementsApi balanceMovements,
         IQuotesApi quotes,
@@ -32,12 +34,14 @@ public sealed class WiseClient : IWiseClient, IDisposable
         IDisposable? owned)
     {
         ArgumentNullException.ThrowIfNull(profiles);
+        ArgumentNullException.ThrowIfNull(multiCurrencyAccounts);
         ArgumentNullException.ThrowIfNull(balances);
         ArgumentNullException.ThrowIfNull(balanceMovements);
         ArgumentNullException.ThrowIfNull(quotes);
         ArgumentNullException.ThrowIfNull(rates);
 
         Profiles = profiles;
+        MultiCurrencyAccounts = multiCurrencyAccounts;
         Balances = balances;
         BalanceMovements = balanceMovements;
         Quotes = quotes;
@@ -47,6 +51,9 @@ public sealed class WiseClient : IWiseClient, IDisposable
 
     /// <inheritdoc />
     public IProfilesApi Profiles { get; }
+
+    /// <inheritdoc />
+    public IMultiCurrencyAccountsApi MultiCurrencyAccounts { get; }
 
     /// <inheritdoc />
     public IBalancesApi Balances { get; }
@@ -93,12 +100,13 @@ public sealed class WiseClient : IWiseClient, IDisposable
 
         var wiseHttp = new WiseHttpClient(http);
         var profiles = new ProfilesApi(wiseHttp);
+        var mca = new MultiCurrencyAccountsApi(wiseHttp);
         var balances = new BalancesApi(wiseHttp);
         var movements = new BalanceMovementsApi(wiseHttp);
         var quotes = new QuotesApi(wiseHttp);
         var rates = new RatesApi(wiseHttp);
 
-        return new WiseClient(profiles, balances, movements, quotes, rates, http);
+        return new WiseClient(profiles, mca, balances, movements, quotes, rates, http);
     }
 
     /// <inheritdoc />

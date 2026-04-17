@@ -19,6 +19,7 @@ public sealed class DependencyInjectionTests
 
         using var provider = services.BuildServiceProvider();
         Assert.NotNull(provider.GetService<IProfilesApi>());
+        Assert.NotNull(provider.GetService<IMultiCurrencyAccountsApi>());
         Assert.NotNull(provider.GetService<IBalancesApi>());
         Assert.NotNull(provider.GetService<IBalanceMovementsApi>());
         Assert.NotNull(provider.GetService<IQuotesApi>());

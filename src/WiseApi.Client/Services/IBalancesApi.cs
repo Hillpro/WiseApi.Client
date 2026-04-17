@@ -2,7 +2,11 @@ using WiseApi.Client.Models.Balances;
 
 namespace WiseApi.Client.Services;
 
-/// <summary>Balance CRUD and multi-currency account operations (<c>/v4/profiles/{profileId}/balances</c>).</summary>
+/// <summary>
+/// Balance CRUD operations (<c>/v4/profiles/{profileId}/balances</c>) for a profile's
+/// multi-currency account. For MCA-level operations (eligibility, retrieve MCA),
+/// see <see cref="IMultiCurrencyAccountsApi"/>.
+/// </summary>
 public interface IBalancesApi
 {
     /// <summary>List balances of the given types for a profile. Defaults to <see cref="BalanceType.Standard"/>.</summary>

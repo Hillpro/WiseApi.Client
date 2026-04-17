@@ -12,7 +12,10 @@ public interface IWiseClient
     /// <summary>Profile read/list.</summary>
     IProfilesApi Profiles { get; }
 
-    /// <summary>Balance CRUD and MCA operations.</summary>
+    /// <summary>Multi-currency account retrieval and eligibility checks.</summary>
+    IMultiCurrencyAccountsApi MultiCurrencyAccounts { get; }
+
+    /// <summary>Balance CRUD (list, get, create, delete) for a profile's multi-currency account.</summary>
     IBalancesApi Balances { get; }
 
     /// <summary>Balance conversions and moves between balances.</summary>

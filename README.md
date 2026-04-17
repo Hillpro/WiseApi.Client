@@ -76,6 +76,7 @@ for custom refresh/rotation logic.
 | Area | Surface | Status |
 | --- | --- | --- |
 | Profiles | `/v2/profiles`, `/v2/profiles/{id}` — personal & business discriminated types | ✅ |
+| Multi-currency account | `/v4/profiles/{id}/multi-currency-account` retrieve, `/v4/multi-currency-account/eligibility` profile & location checks | ✅ |
 | Balances | `/v4/profiles/{id}/balances` list/get/create/delete (STANDARD + SAVINGS) | ✅ |
 | Balance movements | `/v2/profiles/{id}/balance-movements` conversions + same-currency moves with idempotency | ✅ |
 | Quotes | `/v3/profiles/{id}/quotes` create/get, with BALANCE payOut helper | ✅ |

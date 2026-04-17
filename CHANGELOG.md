@@ -6,6 +6,12 @@ All notable changes to this project are documented here. Format based on
 
 ## [Unreleased]
 
+### Added
+- `MultiCurrencyAccounts` service: retrieve a profile's MCA
+  (`/v4/profiles/{id}/multi-currency-account`) and check eligibility for a
+  profile or location (`/v4/multi-currency-account/eligibility`).
+  `GetAsync` returns `null` when the profile has no MCA yet (Wise 404).
+
 ## [0.1.1] — 2026-04-17
 
 Follow-ups from v0.1.0 and a small set of polish items.

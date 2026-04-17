@@ -43,6 +43,7 @@ public static class WiseClientServiceCollectionExtensions
         services.TryAddTransient<WiseAuthenticationHandler>();
 
         services.TryAddTransient<IProfilesApi, ProfilesApi>();
+        services.TryAddTransient<IMultiCurrencyAccountsApi, MultiCurrencyAccountsApi>();
         services.TryAddTransient<IBalancesApi, BalancesApi>();
         services.TryAddTransient<IBalanceMovementsApi, BalanceMovementsApi>();
         services.TryAddTransient<IQuotesApi, QuotesApi>();
