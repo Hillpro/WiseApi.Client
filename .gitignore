@@ -1,0 +1,48 @@
+## .NET
+bin/
+obj/
+out/
+artifacts/
+*.user
+*.suo
+*.userprefs
+*.cache
+*.log
+*.tlog
+*.tmp
+
+## VS / Rider / VSCode
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.sln.DotSettings.user
+
+## NuGet
+*.nupkg
+*.snupkg
+project.lock.json
+.packages/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Local env / secrets
+.env
+.env.*
+*.local.json
+appsettings.Development.json
+appsettings.Local.json
+
+## Coverage
+coverage/
+TestResults/
+*.coverage
+*.coveragexml
+
+## Claude Code scratch
+.claude/local/

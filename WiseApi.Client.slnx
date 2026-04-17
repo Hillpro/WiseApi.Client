@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WiseApi.Client/WiseApi.Client.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WiseApi.Client.Tests/WiseApi.Client.Tests.csproj" />
+  </Folder>
+</Solution>
