@@ -6,6 +6,8 @@ All notable changes to this project are documented here. Format based on
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-04-17
+
 ### Added
 - `MultiCurrencyAccounts` service: retrieve a profile's MCA
   (`/v4/profiles/{id}/multi-currency-account`) and check eligibility for a
@@ -71,6 +73,7 @@ Initial release. Multi-Currency Account (MCA) surface.
 - Recipients, Transfers, Statements, Cards, Webhooks: deferred. See
   [NOTES_FUTURE_WORK.md](NOTES_FUTURE_WORK.md).
 
-[Unreleased]: https://github.com/hillpro/WiseApi.Client/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/hillpro/WiseApi.Client/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/hillpro/WiseApi.Client/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/hillpro/WiseApi.Client/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/hillpro/WiseApi.Client/releases/tag/v0.1.0

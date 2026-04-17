@@ -1,4 +1,3 @@
-using WiseApi.Client.Authentication;
 using WiseApi.Client.Http;
 using WiseApi.Client.Http.Handlers;
 using WiseApi.Client.Services;

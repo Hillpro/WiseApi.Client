@@ -8,13 +8,13 @@
     <IsPackable>true</IsPackable>
     <PackageId>WiseApi.Client</PackageId>
     <Title>WiseApi.Client</Title>
-    <Description>Open-source .NET client for the Wise (formerly TransferWise) Platform API. Initial release focuses on Multi-Currency Account operations: profiles, balances, FX quotes, balance movements/conversions and exchange rates. Ships with Microsoft.Extensions.DependencyInjection, IHttpClientFactory and Microsoft.Extensions.Logging integration.</Description>
+    <Description>Open-source .NET client for the Wise (formerly TransferWise) Platform API. Covers Multi-Currency Account operations: profiles, multi-currency accounts, balances, FX quotes, balance movements/conversions and exchange rates. Ships with Microsoft.Extensions.DependencyInjection, IHttpClientFactory and Microsoft.Extensions.Logging integration.</Description>
     <PackageTags>wise;transferwise;wise-api;mca;multi-currency-account;fx;payments;fintech;nuget;dotnet</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>See CHANGELOG.md for release notes.</PackageReleaseNotes>
-    <Version>0.1.1</Version>
-    <AssemblyVersion>0.1.1.0</AssemblyVersion>
-    <FileVersion>0.1.1.0</FileVersion>
+    <Version>0.2.0</Version>
+    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <FileVersion>0.2.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
