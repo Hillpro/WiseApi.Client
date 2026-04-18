@@ -6,6 +6,31 @@ All notable changes to this project are documented here. Format based on
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-04-18
+
+Full OAuth 2.0 user-token support.
+
+### Added
+- OAuth user-token flows: `authorization_code`, `registration_code`,
+  `refresh_token`. New `UserTokenProvider` with a factory per seed, 12h
+  auto-refresh, `CurrentRefreshToken` property, and `TokenRefreshed` event
+  for persisting rotated refresh tokens.
+- OAuth `ConsentUrl.Build(clientId, redirectUri, state, environment)` to
+  construct the Wise consent-page URL.
+- `WiseClientOptions` shortcut fields for every OAuth flow: `ClientId`,
+  `ClientSecret`, `AuthorizationCode`, `RegistrationCode`, `UserEmail`,
+  `RefreshToken`, `RedirectUri`.
+- `TokenResponse` record covering every `/oauth/token` response field.
+- New `WiseApi.Client.Authentication.OAuth` namespace.
+
+### Changed
+- **Breaking.** `OAuthClientCredentialsProvider` renamed to
+  `ClientCredentialsProvider` and moved into the new
+  `WiseApi.Client.Authentication.OAuth` namespace. Update your `using`.
+- `WiseClient.Create(...)` disposes an implicit OAuth provider it builds
+  on your behalf; an explicit `WiseClientOptions.Credentials` is still
+  owned by the caller.
+
 ## [0.2.0] — 2026-04-17
 
 ### Added
@@ -73,7 +98,8 @@ Initial release. Multi-Currency Account (MCA) surface.
 - Recipients, Transfers, Statements, Cards, Webhooks: deferred. See
   [NOTES_FUTURE_WORK.md](NOTES_FUTURE_WORK.md).
 
-[Unreleased]: https://github.com/hillpro/WiseApi.Client/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/hillpro/WiseApi.Client/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/hillpro/WiseApi.Client/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/hillpro/WiseApi.Client/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/hillpro/WiseApi.Client/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/hillpro/WiseApi.Client/releases/tag/v0.1.0

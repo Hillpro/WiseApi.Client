@@ -11,7 +11,7 @@ namespace WiseApi.Client;
 /// </summary>
 public sealed class WiseClient : IWiseClient, IDisposable
 {
-    private readonly IDisposable? _ownedInfrastructure;
+    private readonly IReadOnlyList<IDisposable> _ownedInfrastructure;
 
     /// <summary>Create a new <see cref="WiseClient"/> from its service dependencies.</summary>
     public WiseClient(
@@ -21,7 +21,7 @@ public sealed class WiseClient : IWiseClient, IDisposable
         IBalanceMovementsApi balanceMovements,
         IQuotesApi quotes,
         IRatesApi rates)
-        : this(profiles, multiCurrencyAccounts, balances, balanceMovements, quotes, rates, owned: null) { }
+        : this(profiles, multiCurrencyAccounts, balances, balanceMovements, quotes, rates, owned: []) { }
 
     private WiseClient(
         IProfilesApi profiles,
@@ -30,7 +30,7 @@ public sealed class WiseClient : IWiseClient, IDisposable
         IBalanceMovementsApi balanceMovements,
         IQuotesApi quotes,
         IRatesApi rates,
-        IDisposable? owned)
+        IReadOnlyList<IDisposable> owned)
     {
         ArgumentNullException.ThrowIfNull(profiles);
         ArgumentNullException.ThrowIfNull(multiCurrencyAccounts);
@@ -76,10 +76,17 @@ public sealed class WiseClient : IWiseClient, IDisposable
     /// lifetime and DNS refresh — the <see cref="SocketsHttpHandler"/> built here uses its
     /// default <c>PooledConnectionLifetime</c> (infinite), so DNS changes won't be picked up
     /// across the lifetime of the returned client.
+    /// <para>
+    /// If <see cref="WiseClientOptions.Credentials"/> is left <c>null</c> and the options imply
+    /// a provider we construct (e.g. <see cref="WiseClientOptions.RefreshToken"/>), the implicit
+    /// provider is tracked and disposed alongside the client. An externally-supplied
+    /// <see cref="WiseClientOptions.Credentials"/> is assumed to be owned by the caller.
+    /// </para>
     /// </remarks>
     public static WiseClient Create(WiseClientOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
+        var callerOwnedCredentials = options.Credentials is not null;
         var credentials = options.ResolveCredentials();
 
         var primary = new SocketsHttpHandler();
@@ -105,12 +112,21 @@ public sealed class WiseClient : IWiseClient, IDisposable
         var quotes = new QuotesApi(wiseHttp);
         var rates = new RatesApi(wiseHttp);
 
-        return new WiseClient(profiles, mca, balances, movements, quotes, rates, http);
+        var owned = new List<IDisposable> { http };
+        if (!callerOwnedCredentials && credentials is IDisposable disposable)
+        {
+            owned.Add(disposable);
+        }
+
+        return new WiseClient(profiles, mca, balances, movements, quotes, rates, owned);
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        _ownedInfrastructure?.Dispose();
+        foreach (var item in _ownedInfrastructure)
+        {
+            item.Dispose();
+        }
     }
 }
