@@ -8,7 +8,6 @@ package page stays focused on what's shipped.
 
 | Target | Scope |
 | --- | --- |
-| v0.3.1 | Concurrency primitives cleanup: drop `volatile` fields, use `Volatile.Read` / `Volatile.Write` at the sites that need memory ordering. |
 | v0.4.0 | §1 Recipients (full surface, including dynamic-requirements discovery) |
 | v0.5.0 | §2 Transfers (create / list / get / cancel; funding deferred to v0.6.0) |
 | v0.6.0 | §3 Minimal SCA surface (`IScaChallengeHandler`) + fund-transfer endpoint + §4 Balance statements |
