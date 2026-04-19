@@ -20,9 +20,9 @@ public sealed class ClientCredentialsProvider : IWiseCredentialsProvider, IDispo
     private readonly TokenClient _tokenClient;
     private readonly HttpClient _httpClient;
     private readonly bool _ownsHttpClient;
-    private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
 
-    private volatile CachedToken? _cached;
+    private CachedToken? _cached;
 
     /// <summary>Create a provider that manages its own <see cref="HttpClient"/>.</summary>
     public ClientCredentialsProvider(string clientId, string clientSecret, WiseEnvironment environment = WiseEnvironment.Sandbox)
@@ -61,7 +61,7 @@ public sealed class ClientCredentialsProvider : IWiseCredentialsProvider, IDispo
             return snapshot.Token;
         }
 
-        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             now = DateTimeOffset.UtcNow;
@@ -78,14 +78,14 @@ public sealed class ClientCredentialsProvider : IWiseCredentialsProvider, IDispo
         }
         finally
         {
-            _lock.Release();
+            _refreshLock.Release();
         }
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        _lock.Dispose();
+        _refreshLock.Dispose();
         if (_ownsHttpClient)
         {
             _httpClient.Dispose();

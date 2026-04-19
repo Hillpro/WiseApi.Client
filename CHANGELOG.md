@@ -6,6 +6,13 @@ All notable changes to this project are documented here. Format based on
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-04-18
+
+### Changed
+- Replaced all `volatile` field modifiers with `SemaphoreSlim` and
+  `System.Threading.Lock`-based synchronisation, following Microsoft's
+  recommendation against the `volatile` keyword. No behavioural change.
+
 ## [0.3.0] — 2026-04-18
 
 Full OAuth 2.0 user-token support.
@@ -98,7 +105,8 @@ Initial release. Multi-Currency Account (MCA) surface.
 - Recipients, Transfers, Statements, Cards, Webhooks: deferred. See
   [NOTES_FUTURE_WORK.md](NOTES_FUTURE_WORK.md).
 
-[Unreleased]: https://github.com/hillpro/WiseApi.Client/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/hillpro/WiseApi.Client/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/hillpro/WiseApi.Client/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/hillpro/WiseApi.Client/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/hillpro/WiseApi.Client/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/hillpro/WiseApi.Client/compare/v0.1.0...v0.1.1

@@ -25,11 +25,11 @@ public sealed class UserTokenProvider : IWiseCredentialsProvider, IDisposable
     private readonly TokenClient _tokenClient;
     private readonly HttpClient _httpClient;
     private readonly bool _ownsHttpClient;
-    private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
 
     private Seed? _pendingSeed;
-    private volatile CachedToken? _cached;
-    private volatile string? _refreshToken;
+    private CachedToken? _cached;
+    private string? _refreshToken;
 
     private UserTokenProvider(
         TokenClient tokenClient,
@@ -45,8 +45,14 @@ public sealed class UserTokenProvider : IWiseCredentialsProvider, IDisposable
         _refreshToken = initialRefreshToken;
     }
 
+    private readonly Lock _refreshTokenLock = new();
+
     /// <summary>The currently-held refresh token, if any. Persist this across process restarts.</summary>
-    public string? CurrentRefreshToken => _refreshToken;
+    public string? CurrentRefreshToken
+    {
+        get { lock (_refreshTokenLock) { return _refreshToken; } }
+        private set { lock (_refreshTokenLock) { _refreshToken = value; } }
+    }
 
     /// <summary>Raised after every successful token refresh. Useful for persisting <see cref="CurrentRefreshToken"/>.</summary>
     public event EventHandler<TokenRefreshedEventArgs>? TokenRefreshed;
@@ -158,7 +164,7 @@ public sealed class UserTokenProvider : IWiseCredentialsProvider, IDisposable
             return snapshot.Token;
         }
 
-        await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             snapshot = _cached;
@@ -174,7 +180,7 @@ public sealed class UserTokenProvider : IWiseCredentialsProvider, IDisposable
             _pendingSeed = null;
             if (!string.IsNullOrEmpty(response.RefreshToken))
             {
-                _refreshToken = response.RefreshToken;
+                CurrentRefreshToken = response.RefreshToken;
             }
 
             var expiresAt = response.ExpiresAt ?? DateTimeOffset.UtcNow.AddSeconds(Math.Max(response.ExpiresIn, 60));
@@ -182,14 +188,14 @@ public sealed class UserTokenProvider : IWiseCredentialsProvider, IDisposable
 
             TokenRefreshed?.Invoke(this, new TokenRefreshedEventArgs(
                 response.AccessToken,
-                _refreshToken,
+                CurrentRefreshToken,
                 expiresAt));
 
             return response.AccessToken;
         }
         finally
         {
-            _lock.Release();
+            _refreshLock.Release();
         }
     }
 
@@ -222,7 +228,7 @@ public sealed class UserTokenProvider : IWiseCredentialsProvider, IDisposable
 
     private Dictionary<string, string> BuildRefreshGrant()
     {
-        var token = _refreshToken
+        var token = CurrentRefreshToken
             ?? throw new InvalidOperationException(
                 "No refresh token available. The initial grant did not return one, and the provider cannot refresh.");
         return new Dictionary<string, string>
@@ -235,7 +241,7 @@ public sealed class UserTokenProvider : IWiseCredentialsProvider, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        _lock.Dispose();
+        _refreshLock.Dispose();
         if (_ownsHttpClient)
         {
             _httpClient.Dispose();
