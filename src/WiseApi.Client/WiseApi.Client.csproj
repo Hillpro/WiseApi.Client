@@ -5,6 +5,8 @@
     <RootNamespace>WiseApi.Client</RootNamespace>
     <AssemblyName>WiseApi.Client</AssemblyName>
 
+    <IsAotCompatible>true</IsAotCompatible>
+
     <IsPackable>true</IsPackable>
     <PackageId>WiseApi.Client</PackageId>
     <Title>WiseApi.Client</Title>

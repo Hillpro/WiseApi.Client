@@ -53,7 +53,7 @@ internal sealed class TokenClient
                 requestUri: _tokenEndpoint);
         }
 
-        var parsed = JsonSerializer.Deserialize<TokenResponse>(body, Serialization.WiseJsonDefaults.Options)
+        var parsed = JsonSerializer.Deserialize(body, Serialization.WiseJsonContext.Default.TokenResponse)
             ?? throw new WiseApiException(
                 "OAuth token response was empty.",
                 response.StatusCode,
@@ -84,7 +84,7 @@ internal sealed class TokenClient
 
         try
         {
-            var error = JsonSerializer.Deserialize<OAuthError>(body, Serialization.WiseJsonDefaults.Options);
+            var error = JsonSerializer.Deserialize(body, Serialization.WiseJsonContext.Default.OAuthError);
             return error is null ? (null, null) : (error.Error, error.ErrorDescription);
         }
         catch (JsonException)
@@ -93,7 +93,7 @@ internal sealed class TokenClient
         }
     }
 
-    private sealed record OAuthError(
+    internal sealed record OAuthError(
         [property: JsonPropertyName("error")] string? Error,
         [property: JsonPropertyName("error_description")] string? ErrorDescription);
 }

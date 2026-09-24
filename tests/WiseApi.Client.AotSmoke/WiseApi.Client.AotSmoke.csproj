@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Native AOT smoke test. `dotnet build` runs the trim / AOT analyzers over this app's use of the
+    library; `dotnet publish -c Release` compiles it natively (needs the platform C/C++ toolchain)
+    and the resulting binary exercises every service against canned responses. Exit code 0 = pass.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <!-- Directory.Build.props evaluates its IsPackable condition before this file sets it, so the
+         pack-only settings still apply here; opt out of the one that affects the build (same as the test project). -->
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Report each trim / AOT warning at its call site instead of one summary per assembly. -->
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\WiseApi.Client\WiseApi.Client.csproj" />
+  </ItemGroup>
+
+</Project>

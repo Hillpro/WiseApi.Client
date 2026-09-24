@@ -1,5 +1,6 @@
 using WiseApi.Client.Http;
 using WiseApi.Client.Models.Balances;
+using WiseApi.Client.Serialization;
 
 namespace WiseApi.Client.Services;
 
@@ -26,7 +27,7 @@ public sealed class BalancesApi : IBalancesApi
             : string.Join(',', types.Select(FormatBalanceType));
 
         var uri = $"/v4/profiles/{profileId}/balances?types={typesQuery}";
-        return _http.GetAsync<IReadOnlyList<Balance>>(uri, cancellationToken);
+        return _http.GetAsync(uri, WiseJsonContext.Default.IReadOnlyListBalance, cancellationToken);
     }
 
     private static string FormatBalanceType(BalanceType type) => type switch
@@ -38,7 +39,7 @@ public sealed class BalancesApi : IBalancesApi
 
     /// <inheritdoc />
     public Task<Balance> GetAsync(long profileId, long balanceId, CancellationToken cancellationToken = default)
-        => _http.GetAsync<Balance>($"/v4/profiles/{profileId}/balances/{balanceId}", cancellationToken);
+        => _http.GetAsync($"/v4/profiles/{profileId}/balances/{balanceId}", WiseJsonContext.Default.Balance, cancellationToken);
 
     /// <inheritdoc />
     public Task<Balance> CreateAsync(
@@ -48,6 +49,11 @@ public sealed class BalancesApi : IBalancesApi
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+        if (request.Type is not (BalanceType.Standard or BalanceType.Savings))
+        {
+            throw new ArgumentException("Balance type must be STANDARD or SAVINGS.", nameof(request));
+        }
+
         if (request.Type == BalanceType.Savings && string.IsNullOrWhiteSpace(request.Name))
         {
             throw new ArgumentException("A name is required when creating a SAVINGS balance.", nameof(request));
@@ -58,9 +64,11 @@ public sealed class BalancesApi : IBalancesApi
             [WiseHttpClient.IdempotencyHeader] = (idempotencyKey ?? Guid.NewGuid()).ToString("D"),
         };
 
-        return _http.PostJsonAsync<CreateBalanceRequest, Balance>(
+        return _http.PostJsonAsync(
             $"/v4/profiles/{profileId}/balances",
             request,
+            WiseJsonContext.Default.CreateBalanceRequest,
+            WiseJsonContext.Default.Balance,
             headers,
             cancellationToken);
     }

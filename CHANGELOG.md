@@ -6,104 +6,70 @@ All notable changes to this project are documented here. Format based on
 
 ## [Unreleased]
 
+### Added
+- Native AOT and trimming support.
+- `WiseHttpClient` overloads taking a `JsonTypeInfo<T>`, for AOT-safe calls to
+  endpoints the library doesn't wrap. `LenientEnumConverter<T>` and
+  `LenientDateTimeOffsetConverter` are public for use in your own `JsonSerializerContext`.
+
+### Fixed
+- Unrecognised, missing or `null` enum values in responses now read as
+  `Unknown` instead of throwing or defaulting to a real value.
+
+### Changed
+- **Breaking.** `Unknown` is now the first member (value `0`) of every
+  response enum. Only affects code relying on the numeric values.
+- **Breaking.** `WiseJsonDefaults.Options` is now a property. It and the
+  `WiseHttpClient` overloads without a `JsonTypeInfo<T>` are flagged as not
+  AOT-safe. Pass `headers:` by name; a positional `null` is now ambiguous.
+
 ## [0.3.1] — 2026-04-18
 
 ### Changed
-- Replaced all `volatile` field modifiers with `SemaphoreSlim` and
-  `System.Threading.Lock`-based synchronisation, following Microsoft's
-  recommendation against the `volatile` keyword. No behavioural change.
+- Internal thread-synchronisation cleanup. No behaviour change.
 
 ## [0.3.0] — 2026-04-18
 
-Full OAuth 2.0 user-token support.
-
 ### Added
-- OAuth user-token flows: `authorization_code`, `registration_code`,
-  `refresh_token`. New `UserTokenProvider` with a factory per seed, 12h
-  auto-refresh, `CurrentRefreshToken` property, and `TokenRefreshed` event
-  for persisting rotated refresh tokens.
-- OAuth `ConsentUrl.Build(clientId, redirectUri, state, environment)` to
-  construct the Wise consent-page URL.
-- `WiseClientOptions` shortcut fields for every OAuth flow: `ClientId`,
-  `ClientSecret`, `AuthorizationCode`, `RegistrationCode`, `UserEmail`,
-  `RefreshToken`, `RedirectUri`.
-- `TokenResponse` record covering every `/oauth/token` response field.
-- New `WiseApi.Client.Authentication.OAuth` namespace.
+- OAuth user-token flows (`authorization_code`, `registration_code`,
+  `refresh_token`) via `UserTokenProvider`, with automatic renewal and a
+  `TokenRefreshed` event for persisting rotated refresh tokens.
+- `ConsentUrl.Build(...)` for the Wise consent page.
+- `WiseClientOptions` shortcut fields for each OAuth flow.
 
 ### Changed
 - **Breaking.** `OAuthClientCredentialsProvider` renamed to
-  `ClientCredentialsProvider` and moved into the new
-  `WiseApi.Client.Authentication.OAuth` namespace. Update your `using`.
-- `WiseClient.Create(...)` disposes an implicit OAuth provider it builds
-  on your behalf; an explicit `WiseClientOptions.Credentials` is still
-  owned by the caller.
+  `ClientCredentialsProvider`, now in `WiseApi.Client.Authentication.OAuth`.
+- `WiseClient.Create(...)` now disposes the OAuth provider it creates for you.
 
 ## [0.2.0] — 2026-04-17
 
 ### Added
-- `MultiCurrencyAccounts` service: retrieve a profile's MCA
-  (`/v4/profiles/{id}/multi-currency-account`) and check eligibility for a
-  profile or location (`/v4/multi-currency-account/eligibility`).
-  `GetAsync` returns `null` when the profile has no MCA yet (Wise 404).
+- `MultiCurrencyAccounts` service: retrieve a profile's multi-currency account
+  (`null` if it has none) and check eligibility by profile or location.
 
 ## [0.1.1] — 2026-04-17
 
-Follow-ups from v0.1.0 and a small set of polish items.
-No runtime API was renamed.
-
 ### Fixed
-- Symbols package (`.snupkg`) is now published. Switched to
- `DebugType=portable` so consumers can step into library source via SourceLink.
+- Symbols package (`.snupkg`) is now published, so you can step into library
+  source via SourceLink.
+- Chunked responses without a `Content-Length` header are now handled correctly.
 
 ### Changed
 - **Breaking.** `Profile.PublicId` is now `Guid?` instead of `string?`.
-  Wise always returns a UUID in this field.
-- `WiseHttpClient` no longer trusts the `Content-Length` header when
-  deciding whether a response body is empty. Chunked responses with no
-  `Content-Length` are now correctly handled.
-- Bumped `Microsoft.SourceLink.GitHub` from `8.0.0` to `10.0.202`.
-
-### Added
-- Direct unit tests for `LenientDateTimeOffsetConverter` covering all
-  three Wise timestamp shapes (ISO-Z, naive, and the non-standard
-  compact `+0000` offset returned by `/v1/rates`).
-- Test that `WiseAuthenticationHandler` does *not* call the credentials
-  provider when the caller has pre-set an `Authorization` header.
 
 ## [0.1.0] — 2026-04-16
 
-Initial release. Multi-Currency Account (MCA) surface.
+Initial release.
 
 ### Added
-- `IWiseClient` facade exposing `Profiles`, `Balances`, `BalanceMovements`,
-  `Quotes`, and `Rates` service groups.
-- `Profiles` service for `/v2/profiles` list/get with polymorphic
-  `PersonalProfile` / `BusinessProfile` deserialization.
-- `Balances` service for `/v4/profiles/{id}/balances` list/get/create/delete
-  with STANDARD + SAVINGS types and auto idempotency keys.
-- `BalanceMovements` service for `/v2/profiles/{id}/balance-movements`:
-  `ConvertAsync(quoteId)` for cross-currency conversions and
-  `MoveAsync(...)` for same-currency transfers.
-- `Quotes` service for `/v3/profiles/{id}/quotes` with a
-  `CreateForBalanceConversionAsync` helper that pre-sets `payOut: BALANCE`.
-- `Rates` service for `/v1/rates`: latest, at-time, and grouped history.
-- `WiseApiException`, `WiseRateLimitException` (with `Retry-After`),
-  `WiseScaChallengeException` (surfaces the `X-2FA-Approval` token).
-- `ApiTokenCredentialsProvider` and `OAuthClientCredentialsProvider`
-  (client-credentials flow, token caching, race-free fast path).
-- `services.AddWiseClient(...)` DI helper with configurable
-  `WiseClientOptions`, `IHttpClientFactory` integration, auto-correlation-id
-  header, user-agent tagging, and logging hooks.
-- `WiseClient.Create(options)` factory for non-DI usage.
-
-### Known limitations
-- SCA request signing (`X-Signature`) is not yet implemented. Endpoints
-  requiring SCA will throw `WiseScaChallengeException`.
-- OAuth `authorization_code` / `registration_code` / refresh-token flows are
-  not yet bundled — fetch the token externally and wrap it with
-  `ApiTokenCredentialsProvider`.
-- Recipients, Transfers, Statements, Cards, Webhooks: deferred. See
-  [NOTES_FUTURE_WORK.md](NOTES_FUTURE_WORK.md).
+- Profiles, balances, balance movements (conversions and same-currency moves),
+  quotes and rates services, behind the `IWiseClient` facade.
+- Typed errors: `WiseApiException`, `WiseRateLimitException` and
+  `WiseScaChallengeException`.
+- Personal-token and `client_credentials` authentication.
+- `services.AddWiseClient(...)` DI registration, plus `WiseClient.Create(...)`
+  for use without DI.
 
 [Unreleased]: https://github.com/hillpro/WiseApi.Client/compare/v0.3.1...HEAD
 [0.3.1]: https://github.com/hillpro/WiseApi.Client/compare/v0.3.0...v0.3.1

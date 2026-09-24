@@ -84,4 +84,15 @@ public sealed class BalancesApiTests
         await Assert.ThrowsAsync<ArgumentException>(() =>
             api.CreateAsync(1, new CreateBalanceRequest("EUR", BalanceType.Savings), idempotencyKey: null, CancellationToken.None));
     }
+
+    [Fact]
+    public async Task CreateAsync_rejects_unknown_balance_type()
+    {
+        var (http, handler) = TestHost.CreateHttpClient();
+        var api = new BalancesApi(http);
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            api.CreateAsync(1, new CreateBalanceRequest("EUR", BalanceType.Unknown), idempotencyKey: null, CancellationToken.None));
+        Assert.Empty(handler.Requests);
+    }
 }

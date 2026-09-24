@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using WiseApi.Client.Serialization;
 
 namespace WiseApi.Client.Models.Profiles;
 
@@ -13,8 +14,12 @@ public enum ProfileType
 }
 
 /// <summary>Visibility state of a Wise profile.</summary>
+[JsonConverter(typeof(LenientEnumConverter<ProfileState>))]
 public enum ProfileState
 {
+    /// <summary>A value this client version does not recognise.</summary>
+    Unknown,
+
     /// <summary>Hidden from the user's dashboard.</summary>
     Hidden,
 

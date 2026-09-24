@@ -11,7 +11,12 @@ namespace WiseApi.Client.Serialization;
 /// <c>+0000</c> form (<c>2018-08-31T10:43:31+0000</c>). The default System.Text.Json parser rejects
 /// the last form, hence this converter.
 /// </summary>
-internal sealed class LenientDateTimeOffsetConverter : JsonConverter<DateTimeOffset>
+/// <remarks>
+/// Public so that a consumer's own <see cref="JsonSerializerContext"/> (for endpoints this library
+/// doesn't wrap) can register it in <c>[JsonSourceGenerationOptions(Converters = [...])]</c> and get
+/// the same timestamp handling as the library.
+/// </remarks>
+public sealed class LenientDateTimeOffsetConverter : JsonConverter<DateTimeOffset>
 {
     private static readonly string[] AcceptedFormats =
     {
@@ -25,6 +30,7 @@ internal sealed class LenientDateTimeOffsetConverter : JsonConverter<DateTimeOff
         "yyyy-MM-ddTHH:mm:sszz00",
     };
 
+    /// <inheritdoc />
     public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.Null)
@@ -62,6 +68,7 @@ internal sealed class LenientDateTimeOffsetConverter : JsonConverter<DateTimeOff
         throw new JsonException($"Unsupported date/time format: '{text}'.");
     }
 
+    /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options)
     {
         writer.WriteStringValue(value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture));

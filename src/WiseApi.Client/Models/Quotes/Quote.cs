@@ -1,8 +1,15 @@
+using System.Text.Json.Serialization;
+using WiseApi.Client.Serialization;
+
 namespace WiseApi.Client.Models.Quotes;
 
 /// <summary>Current lifecycle state of a quote.</summary>
+[JsonConverter(typeof(LenientEnumConverter<QuoteStatus>))]
 public enum QuoteStatus
 {
+    /// <summary>A value this client version does not recognise.</summary>
+    Unknown,
+
     /// <summary>Quote has been created but not yet used.</summary>
     Pending,
 
@@ -17,8 +24,12 @@ public enum QuoteStatus
 }
 
 /// <summary>Whether the quote rate is guaranteed or floating.</summary>
+[JsonConverter(typeof(LenientEnumConverter<RateType>))]
 public enum RateType
 {
+    /// <summary>A value this client version does not recognise.</summary>
+    Unknown,
+
     /// <summary>Rate is locked until <see cref="Quote.RateExpirationTime"/>.</summary>
     Fixed,
 
@@ -27,8 +38,12 @@ public enum RateType
 }
 
 /// <summary>Whether the user supplied a source or target amount.</summary>
+[JsonConverter(typeof(LenientEnumConverter<ProvidedAmountType>))]
 public enum ProvidedAmountType
 {
+    /// <summary>A value this client version does not recognise.</summary>
+    Unknown,
+
     /// <summary>The source amount was specified.</summary>
     Source,
 

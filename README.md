@@ -10,7 +10,8 @@ FX quotes, balance conversions/moves, exchange rates) and the full set of
 authorization code, registration code, refresh token).
 
 Built for **.NET 10**, ships with first-class `Microsoft.Extensions.DependencyInjection`,
-`IHttpClientFactory`, and `Microsoft.Extensions.Logging` support.
+`IHttpClientFactory`, and `Microsoft.Extensions.Logging` support. **Native AOT and
+trimming compatible.**
 
 ---
 
@@ -192,6 +193,30 @@ retry handlers (Polly), tracing, or additional middleware:
 services.AddWiseClient(cfg => cfg.ApiToken = "...")
         .AddStandardResilienceHandler();
 ```
+
+## Native AOT
+
+Every service works in `PublishAot` and trimmed apps with no extra setup. To call a
+Wise endpoint the library doesn't wrap yet, use the `WiseHttpClient` overloads that
+take a `JsonTypeInfo<T>` from your own `JsonSerializerContext`. Use the web defaults
+(Wise JSON is camelCase) and register the library's date converter (Wise mixes
+timestamp formats):
+
+```csharp
+using WiseApi.Client.Http;
+using WiseApi.Client.Serialization;
+
+[JsonSourceGenerationOptions(JsonSerializerDefaults.Web, Converters = [typeof(LenientDateTimeOffsetConverter)])]
+[JsonSerializable(typeof(MyResponse))]
+internal partial class MyJsonContext : JsonSerializerContext;
+
+var http = app.Services.GetRequiredService<WiseHttpClient>();
+var result = await http.GetAsync("/v1/some-endpoint", MyJsonContext.Default.MyResponse);
+```
+
+Wise enums used in your types (e.g. `BalanceType`) are handled automatically; enums you
+define yourself need a converter, as in any source-generated context. The overloads
+without a `JsonTypeInfo<T>` still work outside AOT, but use reflection.
 
 ## Contributing
 

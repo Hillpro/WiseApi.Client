@@ -8,13 +8,13 @@ package page stays focused on what's shipped.
 
 | Target | Scope |
 | --- | --- |
-| v0.4.0 | §1 Recipients (full surface, including dynamic-requirements discovery) |
-| v0.5.0 | §2 Transfers (create / list / get / cancel; funding deferred to v0.6.0) |
-| v0.6.0 | §3 Minimal SCA surface (`IScaChallengeHandler`) + fund-transfer endpoint + §4 Balance statements |
+| v0.5.0 | §1 Recipients (full surface, including dynamic-requirements discovery) |
+| v0.6.0 | §2 Transfers (create / list / get / cancel; funding deferred to v0.7.0) |
+| v0.7.0 | §3 Minimal SCA surface (`IScaChallengeHandler`) + fund-transfer endpoint + §4 Balance statements |
 | later  | §3 Full in-library SCA (JOSE layer, OTT service, reference challenge handler) |
-| later  | §5 Webhooks, §6 Cards/Assets/Bulk, §7 Observability polish, §8 Source-generated JSON |
+| later  | §5 Webhooks, §6 Cards/Assets/Bulk, §7 Observability polish |
 
-## 1. Recipients (v0.4.0)
+## 1. Recipients (v0.5.0)
 
 - `GET /v1/quotes/{quoteId}/account-requirements` and
   `POST /v1/quotes/{quoteId}/account-requirements` — dynamic field discovery.
@@ -51,7 +51,7 @@ Dynamic requirements API:
 | --- | --- |
 | `DiscoverRequirementsAsync(quoteId, ct)` | → `RequirementsSchema` (list of `RequirementGroup` alternatives) |
 | `RefreshRequirementsAsync(quoteId, draft, ct)` | Manual refresh; consumer calls after a `refreshRequirementsOnChange` field changes. |
-| `CreateAsync(quoteId, type, details, ct)` | `details` is `IReadOnlyDictionary<string, object?>`. Throws `WiseApiException` with field-level errors mapped. |
+| `CreateAsync(quoteId, type, details, ct)` | `details` is a `JsonObject` (not `IReadOnlyDictionary<string, object?>` — `object?` values need every runtime type registered for source-generated JSON). Throws `WiseApiException` with field-level errors mapped. |
 | `DeleteAsync(recipientId, ct)` | — |
 | `CheckCompatibilityAsync(recipientId, quoteId, ct)` | Wraps `POST /v1/accounts/check`. |
 
@@ -60,14 +60,14 @@ Dynamic requirements API:
 
 Access: Personal Token ✅ and OAuth ✅ (no SCA, no PSD2 restriction).
 
-## 2. Transfers (v0.5.0 — excluding funding)
+## 2. Transfers (v0.6.0 — excluding funding)
 
 - `POST /v1/transfers` create a transfer from a quote + recipient.
 - `GET /v1/transfers` list, `GET /v1/transfers/{id}` get.
 - `PUT /v1/transfers/{id}/cancel` cancel.
 
 Funding (`POST /v3/profiles/{profileId}/transfers/{transferId}/payments`) is
-split out to v0.6.0 because it needs the minimal SCA seam in EU/UK and is
+split out to v0.7.0 because it needs the minimal SCA seam in EU/UK and is
 PSD2-blocked for personal tokens there. Non-funding endpoints work with both
 auth modes, no SCA.
 
@@ -119,7 +119,7 @@ Low-risk operations honour a 5-minute SCA session after one clearance; for
 MCA the realistic first user is balance statements (see §4) and transfer
 funding (see §2).
 
-### Minimal SCA surface (v0.6.0)
+### Minimal SCA surface (v0.7.0)
 
 Give integrators a seam without the full JOSE stack. Library handles
 detection and replay; consumers handle the challenge-clearing themselves
@@ -187,7 +187,7 @@ Docs to drive this:
 - <https://docs.wise.com/api-reference/one-time-token>
 - <https://docs.wise.com/api-reference/jose>
 
-## 4. Balance statements (v0.6.0)
+## 4. Balance statements (v0.7.0)
 
 `GET /v1/profiles/{profileId}/balance-statements/{balanceId}/statement.{ext}`
 — seven formats (`json`, `csv`, `pdf`, `xlsx`, `xml` (CAMT.053), `mt940`,
@@ -217,9 +217,3 @@ surfaces and change more often. Flag for later.
 - Optional OpenTelemetry semantic attributes (`wise.profile.id`, `wise.endpoint.group`).
 - A `WiseLoggingHandler` that emits redacted request/response pairs at `Debug`.
 
-## 8. Source-generated JSON serialization
-
-Currently uses reflection-based `System.Text.Json` for speed of iteration. Once
-the model surface stabilises, add a `JsonSerializerContext` partial with all
-request/response types so the client is AOT-friendly and the assembly is
-smaller when trimmed.

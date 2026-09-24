@@ -1,6 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using WiseApi.Client.Serialization;
@@ -35,17 +37,37 @@ public sealed partial class WiseHttpClient
         _logger = logger ?? NullLogger<WiseHttpClient>.Instance;
     }
 
-    /// <summary>Issue a GET request and deserialize the JSON response body into <typeparamref name="TResponse"/>.</summary>
-    public Task<TResponse> GetAsync<TResponse>(string requestUri, CancellationToken cancellationToken = default)
-        => GetAsync<TResponse>(requestUri, headers: null, cancellationToken);
+    /// <summary>
+    /// Issue a GET request and deserialize the JSON response body using <paramref name="responseType"/>.
+    /// Trimming / Native AOT safe.
+    /// </summary>
+    public Task<TResponse> GetAsync<TResponse>(string requestUri, JsonTypeInfo<TResponse> responseType, CancellationToken cancellationToken = default)
+        => GetAsync(requestUri, responseType, headers: null, cancellationToken);
 
-    /// <summary>Issue a GET request with custom headers.</summary>
-    public async Task<TResponse> GetAsync<TResponse>(string requestUri, IReadOnlyDictionary<string, string>? headers, CancellationToken cancellationToken = default)
+    /// <summary>Issue a GET request with custom headers. Trimming / Native AOT safe.</summary>
+    public async Task<TResponse> GetAsync<TResponse>(
+        string requestUri,
+        JsonTypeInfo<TResponse> responseType,
+        IReadOnlyDictionary<string, string>? headers,
+        CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(responseType);
         using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         ApplyHeaders(request, headers);
-        return await SendAsync<TResponse>(request, cancellationToken).ConfigureAwait(false);
+        return await SendAsync(request, responseType, cancellationToken).ConfigureAwait(false);
     }
+
+    /// <summary>Issue a GET request and deserialize the JSON response body into <typeparamref name="TResponse"/>.</summary>
+    [RequiresUnreferencedCode(WiseJsonDefaults.ReflectionMessage)]
+    [RequiresDynamicCode(WiseJsonDefaults.ReflectionMessage)]
+    public Task<TResponse> GetAsync<TResponse>(string requestUri, CancellationToken cancellationToken = default)
+        => GetAsync(requestUri, ReflectionTypeInfo<TResponse>(), headers: null, cancellationToken);
+
+    /// <summary>Issue a GET request with custom headers.</summary>
+    [RequiresUnreferencedCode(WiseJsonDefaults.ReflectionMessage)]
+    [RequiresDynamicCode(WiseJsonDefaults.ReflectionMessage)]
+    public Task<TResponse> GetAsync<TResponse>(string requestUri, IReadOnlyDictionary<string, string>? headers, CancellationToken cancellationToken = default)
+        => GetAsync(requestUri, ReflectionTypeInfo<TResponse>(), headers, cancellationToken);
 
     /// <summary>Issue a GET request and return the raw <see cref="HttpResponseMessage"/> for non-JSON responses (e.g. statement files).</summary>
     public async Task<HttpResponseMessage> GetRawAsync(string requestUri, IReadOnlyDictionary<string, string>? headers, CancellationToken cancellationToken = default)
@@ -61,7 +83,31 @@ public sealed partial class WiseHttpClient
         return response;
     }
 
+    /// <summary>
+    /// Issue a POST with a JSON body and deserialize the response, using the supplied metadata.
+    /// Trimming / Native AOT safe.
+    /// </summary>
+    public Task<TResponse> PostJsonAsync<TRequest, TResponse>(
+        string requestUri,
+        TRequest body,
+        JsonTypeInfo<TRequest> requestType,
+        JsonTypeInfo<TResponse> responseType,
+        CancellationToken cancellationToken = default)
+        => PostJsonAsync(requestUri, body, requestType, responseType, headers: null, cancellationToken);
+
+    /// <summary>Issue a POST with a JSON body and custom headers. Trimming / Native AOT safe.</summary>
+    public Task<TResponse> PostJsonAsync<TRequest, TResponse>(
+        string requestUri,
+        TRequest body,
+        JsonTypeInfo<TRequest> requestType,
+        JsonTypeInfo<TResponse> responseType,
+        IReadOnlyDictionary<string, string>? headers,
+        CancellationToken cancellationToken = default)
+        => SendJsonAsync(HttpMethod.Post, requestUri, body, requestType, responseType, headers, cancellationToken);
+
     /// <summary>Issue a POST with a JSON body and deserialize the response.</summary>
+    [RequiresUnreferencedCode(WiseJsonDefaults.ReflectionMessage)]
+    [RequiresDynamicCode(WiseJsonDefaults.ReflectionMessage)]
     public Task<TResponse> PostJsonAsync<TRequest, TResponse>(
         string requestUri,
         TRequest body,
@@ -69,34 +115,37 @@ public sealed partial class WiseHttpClient
         => PostJsonAsync<TRequest, TResponse>(requestUri, body, headers: null, cancellationToken);
 
     /// <summary>Issue a POST with a JSON body and custom headers, deserialize the response.</summary>
-    public async Task<TResponse> PostJsonAsync<TRequest, TResponse>(
+    [RequiresUnreferencedCode(WiseJsonDefaults.ReflectionMessage)]
+    [RequiresDynamicCode(WiseJsonDefaults.ReflectionMessage)]
+    public Task<TResponse> PostJsonAsync<TRequest, TResponse>(
         string requestUri,
         TRequest body,
         IReadOnlyDictionary<string, string>? headers,
         CancellationToken cancellationToken = default)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Post, requestUri)
-        {
-            Content = JsonContent.Create(body, options: WiseJsonDefaults.Options),
-        };
-        ApplyHeaders(request, headers);
-        return await SendAsync<TResponse>(request, cancellationToken).ConfigureAwait(false);
-    }
+        => SendJsonAsync(HttpMethod.Post, requestUri, body, ReflectionTypeInfo<TRequest>(), ReflectionTypeInfo<TResponse>(), headers, cancellationToken);
+
+    /// <summary>
+    /// Issue a PATCH with a JSON body and deserialize the response, using the supplied metadata.
+    /// Trimming / Native AOT safe.
+    /// </summary>
+    public Task<TResponse> PatchJsonAsync<TRequest, TResponse>(
+        string requestUri,
+        TRequest body,
+        JsonTypeInfo<TRequest> requestType,
+        JsonTypeInfo<TResponse> responseType,
+        IReadOnlyDictionary<string, string>? headers = null,
+        CancellationToken cancellationToken = default)
+        => SendJsonAsync(HttpMethod.Patch, requestUri, body, requestType, responseType, headers, cancellationToken);
 
     /// <summary>Issue a PATCH with a JSON body and deserialize the response.</summary>
-    public async Task<TResponse> PatchJsonAsync<TRequest, TResponse>(
+    [RequiresUnreferencedCode(WiseJsonDefaults.ReflectionMessage)]
+    [RequiresDynamicCode(WiseJsonDefaults.ReflectionMessage)]
+    public Task<TResponse> PatchJsonAsync<TRequest, TResponse>(
         string requestUri,
         TRequest body,
         IReadOnlyDictionary<string, string>? headers = null,
         CancellationToken cancellationToken = default)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Patch, requestUri)
-        {
-            Content = JsonContent.Create(body, options: WiseJsonDefaults.Options),
-        };
-        ApplyHeaders(request, headers);
-        return await SendAsync<TResponse>(request, cancellationToken).ConfigureAwait(false);
-    }
+        => SendJsonAsync(HttpMethod.Patch, requestUri, body, ReflectionTypeInfo<TRequest>(), ReflectionTypeInfo<TResponse>(), headers, cancellationToken);
 
     /// <summary>Issue a DELETE request.</summary>
     public async Task DeleteAsync(string requestUri, IReadOnlyDictionary<string, string>? headers = null, CancellationToken cancellationToken = default)
@@ -123,7 +172,31 @@ public sealed partial class WiseHttpClient
         }
     }
 
-    private async Task<TResponse> SendAsync<TResponse>(HttpRequestMessage request, CancellationToken cancellationToken)
+    [RequiresUnreferencedCode(WiseJsonDefaults.ReflectionMessage)]
+    [RequiresDynamicCode(WiseJsonDefaults.ReflectionMessage)]
+    private static JsonTypeInfo<T> ReflectionTypeInfo<T>()
+        => (JsonTypeInfo<T>)WiseJsonDefaults.Options.GetTypeInfo(typeof(T));
+
+    private async Task<TResponse> SendJsonAsync<TRequest, TResponse>(
+        HttpMethod method,
+        string requestUri,
+        TRequest body,
+        JsonTypeInfo<TRequest> requestType,
+        JsonTypeInfo<TResponse> responseType,
+        IReadOnlyDictionary<string, string>? headers,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(requestType);
+        ArgumentNullException.ThrowIfNull(responseType);
+        using var request = new HttpRequestMessage(method, requestUri)
+        {
+            Content = JsonContent.Create(body, requestType),
+        };
+        ApplyHeaders(request, headers);
+        return await SendAsync(request, responseType, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<TResponse> SendAsync<TResponse>(HttpRequestMessage request, JsonTypeInfo<TResponse> responseType, CancellationToken cancellationToken)
     {
         var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
         try
@@ -147,7 +220,7 @@ public sealed partial class WiseHttpClient
                 return default!;
             }
 
-            var result = JsonSerializer.Deserialize<TResponse>(bytes, WiseJsonDefaults.Options);
+            var result = JsonSerializer.Deserialize(bytes, responseType);
             return result!;
         }
         finally

@@ -1,8 +1,15 @@
+using System.Text.Json.Serialization;
+using WiseApi.Client.Serialization;
+
 namespace WiseApi.Client.Models.Balances;
 
 /// <summary>Type of balance movement (from the API's perspective).</summary>
+[JsonConverter(typeof(LenientEnumConverter<BalanceMovementType>))]
 public enum BalanceMovementType
 {
+    /// <summary>A value this client version does not recognise.</summary>
+    Unknown,
+
     /// <summary>Funds added to a balance.</summary>
     Deposit,
 
@@ -14,8 +21,12 @@ public enum BalanceMovementType
 }
 
 /// <summary>Current state of a balance movement.</summary>
+[JsonConverter(typeof(LenientEnumConverter<BalanceMovementState>))]
 public enum BalanceMovementState
 {
+    /// <summary>A value this client version does not recognise.</summary>
+    Unknown,
+
     /// <summary>In-flight.</summary>
     Pending,
 

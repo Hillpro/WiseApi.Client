@@ -1,6 +1,7 @@
 using System.Net;
 using WiseApi.Client.Http;
 using WiseApi.Client.Models.MultiCurrencyAccounts;
+using WiseApi.Client.Serialization;
 
 namespace WiseApi.Client.Services;
 
@@ -21,8 +22,9 @@ public sealed class MultiCurrencyAccountsApi : IMultiCurrencyAccountsApi
     {
         try
         {
-            return await _http.GetAsync<MultiCurrencyAccount>(
+            return await _http.GetAsync(
                 $"/v4/profiles/{profileId}/multi-currency-account",
+                WiseJsonContext.Default.MultiCurrencyAccount,
                 cancellationToken).ConfigureAwait(false);
         }
         catch (WiseApiException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
@@ -33,8 +35,9 @@ public sealed class MultiCurrencyAccountsApi : IMultiCurrencyAccountsApi
 
     /// <inheritdoc />
     public Task<MultiCurrencyAccountEligibility> GetEligibilityAsync(long profileId, CancellationToken cancellationToken = default)
-        => _http.GetAsync<MultiCurrencyAccountEligibility>(
+        => _http.GetAsync(
             $"/v4/multi-currency-account/eligibility?profileId={profileId}",
+            WiseJsonContext.Default.MultiCurrencyAccountEligibility,
             cancellationToken);
 
     /// <inheritdoc />
@@ -55,6 +58,6 @@ public sealed class MultiCurrencyAccountsApi : IMultiCurrencyAccountsApi
             uri += $"&state={Uri.EscapeDataString(state)}";
         }
 
-        return _http.GetAsync<MultiCurrencyAccountEligibility>(uri, cancellationToken);
+        return _http.GetAsync(uri, WiseJsonContext.Default.MultiCurrencyAccountEligibility, cancellationToken);
     }
 }

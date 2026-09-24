@@ -1,6 +1,7 @@
 using System.Globalization;
 using WiseApi.Client.Http;
 using WiseApi.Client.Models.Rates;
+using WiseApi.Client.Serialization;
 
 namespace WiseApi.Client.Services;
 
@@ -18,7 +19,7 @@ public sealed class RatesApi : IRatesApi
 
     /// <inheritdoc />
     public Task<IReadOnlyList<Rate>> GetAllAsync(CancellationToken cancellationToken = default)
-        => _http.GetAsync<IReadOnlyList<Rate>>("/v1/rates", cancellationToken);
+        => _http.GetAsync("/v1/rates", WiseJsonContext.Default.IReadOnlyListRate, cancellationToken);
 
     /// <inheritdoc />
     public async Task<Rate?> GetLatestAsync(string sourceCurrency, string targetCurrency, CancellationToken cancellationToken = default)
@@ -26,8 +27,9 @@ public sealed class RatesApi : IRatesApi
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceCurrency);
         ArgumentException.ThrowIfNullOrWhiteSpace(targetCurrency);
 
-        var result = await _http.GetAsync<IReadOnlyList<Rate>>(
+        var result = await _http.GetAsync(
             $"/v1/rates?source={Uri.EscapeDataString(sourceCurrency)}&target={Uri.EscapeDataString(targetCurrency)}",
+            WiseJsonContext.Default.IReadOnlyListRate,
             cancellationToken).ConfigureAwait(false);
         return result is { Count: > 0 } ? result[0] : null;
     }
@@ -39,8 +41,9 @@ public sealed class RatesApi : IRatesApi
         ArgumentException.ThrowIfNullOrWhiteSpace(targetCurrency);
 
         var time = at.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
-        var result = await _http.GetAsync<IReadOnlyList<Rate>>(
+        var result = await _http.GetAsync(
             $"/v1/rates?source={Uri.EscapeDataString(sourceCurrency)}&target={Uri.EscapeDataString(targetCurrency)}&time={Uri.EscapeDataString(time)}",
+            WiseJsonContext.Default.IReadOnlyListRate,
             cancellationToken).ConfigureAwait(false);
         return result is { Count: > 0 } ? result[0] : null;
     }
@@ -66,7 +69,7 @@ public sealed class RatesApi : IRatesApi
                   $"&from={Uri.EscapeDataString(Format(from))}" +
                   $"&to={Uri.EscapeDataString(Format(until))}" +
                   $"&group={FormatGrouping(grouping)}";
-        return _http.GetAsync<IReadOnlyList<Rate>>(uri, cancellationToken);
+        return _http.GetAsync(uri, WiseJsonContext.Default.IReadOnlyListRate, cancellationToken);
     }
 
     private static string Format(DateTimeOffset value) =>

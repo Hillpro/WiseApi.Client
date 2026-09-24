@@ -1,8 +1,15 @@
+using System.Text.Json.Serialization;
+using WiseApi.Client.Serialization;
+
 namespace WiseApi.Client.Models.MultiCurrencyAccounts;
 
 /// <summary>Level of multi-currency account access granted to a profile.</summary>
+[JsonConverter(typeof(LenientEnumConverter<MultiCurrencyAccountType>))]
 public enum MultiCurrencyAccountType
 {
+    /// <summary>A value this client version does not recognise.</summary>
+    Unknown,
+
     /// <summary>Full multi-currency account — can send, receive, hold, and convert.</summary>
     Full,
 

@@ -1,6 +1,7 @@
 using WiseApi.Client.Http;
 using WiseApi.Client.Models;
 using WiseApi.Client.Models.Balances;
+using WiseApi.Client.Serialization;
 
 namespace WiseApi.Client.Services;
 
@@ -56,9 +57,11 @@ public sealed class BalanceMovementsApi : IBalanceMovementsApi
             [WiseHttpClient.IdempotencyHeader] = (idempotencyKey ?? Guid.NewGuid()).ToString("D"),
         };
 
-        return _http.PostJsonAsync<BalanceMovementRequest, BalanceMovement>(
+        return _http.PostJsonAsync(
             $"/v2/profiles/{profileId}/balance-movements",
             request,
+            WiseJsonContext.Default.BalanceMovementRequest,
+            WiseJsonContext.Default.BalanceMovement,
             headers,
             cancellationToken);
     }

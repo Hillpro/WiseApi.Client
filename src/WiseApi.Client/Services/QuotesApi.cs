@@ -1,5 +1,6 @@
 using WiseApi.Client.Http;
 using WiseApi.Client.Models.Quotes;
+using WiseApi.Client.Serialization;
 
 namespace WiseApi.Client.Services;
 
@@ -19,9 +20,11 @@ public sealed class QuotesApi : IQuotesApi
     public Task<Quote> CreateAsync(long profileId, CreateQuoteRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return _http.PostJsonAsync<CreateQuoteRequest, Quote>(
+        return _http.PostJsonAsync(
             $"/v3/profiles/{profileId}/quotes",
             request,
+            WiseJsonContext.Default.CreateQuoteRequest,
+            WiseJsonContext.Default.Quote,
             cancellationToken);
     }
 
@@ -46,5 +49,5 @@ public sealed class QuotesApi : IQuotesApi
 
     /// <inheritdoc />
     public Task<Quote> GetAsync(long profileId, Guid quoteId, CancellationToken cancellationToken = default)
-        => _http.GetAsync<Quote>($"/v3/profiles/{profileId}/quotes/{quoteId:D}", cancellationToken);
+        => _http.GetAsync($"/v3/profiles/{profileId}/quotes/{quoteId:D}", WiseJsonContext.Default.Quote, cancellationToken);
 }

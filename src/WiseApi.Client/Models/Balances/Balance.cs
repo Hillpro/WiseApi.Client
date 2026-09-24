@@ -1,8 +1,15 @@
+using System.Text.Json.Serialization;
+using WiseApi.Client.Serialization;
+
 namespace WiseApi.Client.Models.Balances;
 
 /// <summary>Type of balance account.</summary>
+[JsonConverter(typeof(LenientEnumConverter<BalanceType>))]
 public enum BalanceType
 {
+    /// <summary>A value this client version does not recognise. Never send it to Wise.</summary>
+    Unknown,
+
     /// <summary>A standard balance — only one per currency per profile.</summary>
     Standard,
 
@@ -11,8 +18,12 @@ public enum BalanceType
 }
 
 /// <summary>Investment state of a balance.</summary>
+[JsonConverter(typeof(LenientEnumConverter<InvestmentState>))]
 public enum InvestmentState
 {
+    /// <summary>Wise reported <c>UNKNOWN</c>, or returned a value this client version does not recognise.</summary>
+    Unknown,
+
     /// <summary>Not invested.</summary>
     NotInvested,
 
@@ -24,9 +35,6 @@ public enum InvestmentState
 
     /// <summary>Being divested.</summary>
     Divesting,
-
-    /// <summary>Unknown state.</summary>
-    Unknown,
 }
 
 /// <summary>Icon associated with a balance (typically an emoji).</summary>
