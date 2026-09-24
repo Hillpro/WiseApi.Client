@@ -20,6 +20,13 @@ public sealed class QuotesApi : IQuotesApi
     public Task<Quote> CreateAsync(long profileId, CreateQuoteRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
+        if (request.SourceAmount.HasValue == request.TargetAmount.HasValue)
+        {
+            throw new ArgumentException(
+                "Exactly one of SourceAmount or TargetAmount must be provided.",
+                nameof(request));
+        }
+
         return _http.PostJsonAsync(
             $"/v3/profiles/{profileId}/quotes",
             request,

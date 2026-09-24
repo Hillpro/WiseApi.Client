@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
@@ -77,7 +78,10 @@ public sealed partial class WiseHttpClient
         var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
         {
-            await ThrowFromFailureAsync(response, request, cancellationToken).ConfigureAwait(false);
+            using (response)
+            {
+                await ThrowFromFailureAsync(response, request, cancellationToken).ConfigureAwait(false);
+            }
         }
 
         return response;
@@ -239,10 +243,9 @@ public sealed partial class WiseHttpClient
 
         if (response.StatusCode == HttpStatusCode.TooManyRequests)
         {
-            TimeSpan? retryAfter = response.Headers.RetryAfter?.Delta;
             throw new WiseRateLimitException(
                 $"Wise rate limit exceeded on {request.Method.Method} {request.RequestUri}.",
-                retryAfter,
+                RetryDelay(response.Headers.RetryAfter),
                 rawBody: body,
                 correlationId: correlation,
                 traceId: trace,
@@ -289,6 +292,22 @@ public sealed partial class WiseHttpClient
         var first = errors[0];
         var detail = first.Code is null ? first.Message : $"{first.Code}: {first.Message}";
         return $"{prefix}. {detail}";
+    }
+
+    private static TimeSpan? RetryDelay(RetryConditionHeaderValue? retryAfter)
+    {
+        if (retryAfter?.Delta is { } delta)
+        {
+            return delta;
+        }
+
+        if (retryAfter?.Date is { } date)
+        {
+            var remaining = date - DateTimeOffset.UtcNow;
+            return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
+        }
+
+        return null;
     }
 
     private static string? FirstHeader(HttpResponseMessage response, string name)

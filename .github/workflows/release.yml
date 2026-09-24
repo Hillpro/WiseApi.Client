@@ -10,7 +10,7 @@ jobs:
     name: Pack & push to NuGet
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - uses: actions/checkout@v7
         with:

@@ -19,6 +19,9 @@ All notable changes to this project are documented here. Format based on
   comes first.
 - `WiseScaChallengeException` now describes Wise's current one-time-token flow
   instead of asking for an `X-Signature` header.
+- `WiseRateLimitException.RetryAfter` is now set when Wise sends `Retry-After`
+  as a date rather than a number of seconds.
+- `WiseHttpClient.GetRawAsync` no longer leaks the response when the call fails.
 
 ### Changed
 - **Breaking.** `Unknown` is now the first member (value `0`) of every
@@ -28,6 +31,8 @@ All notable changes to this project are documented here. Format based on
   AOT-safe. Pass `headers:` by name; a positional `null` is now ambiguous.
 - **Breaking.** `Quote.SourceAmount` and `Quote.TargetAmount` are now `decimal?`.
   A missing amount used to read as `0`, and a `null` one threw.
+- `Quotes.CreateAsync` now throws `ArgumentException` before sending unless
+  exactly one of `SourceAmount` and `TargetAmount` is set.
 
 ## [0.3.1] — 2026-04-18
 

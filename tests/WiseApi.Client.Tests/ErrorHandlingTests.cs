@@ -55,6 +55,49 @@ public sealed class ErrorHandlingTests
     }
 
     [Fact]
+    public async Task Converts_retry_after_http_date_to_remaining_delay()
+    {
+        var (http, handler) = TestHost.CreateHttpClient();
+        handler.EnqueueJson("{}", HttpStatusCode.TooManyRequests, customize: response =>
+        {
+            response.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(DateTimeOffset.UtcNow.AddSeconds(30));
+        });
+        var api = new ProfilesApi(http);
+
+        var ex = await Assert.ThrowsAsync<WiseRateLimitException>(() => api.ListAsync(CancellationToken.None));
+
+        Assert.NotNull(ex.RetryAfter);
+        Assert.InRange(ex.RetryAfter.Value, TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(30));
+    }
+
+    [Fact]
+    public async Task Retry_after_http_date_in_the_past_means_retry_now()
+    {
+        var (http, handler) = TestHost.CreateHttpClient();
+        handler.EnqueueJson("{}", HttpStatusCode.TooManyRequests, customize: response =>
+        {
+            response.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(DateTimeOffset.UtcNow.AddMinutes(-1));
+        });
+        var api = new ProfilesApi(http);
+
+        var ex = await Assert.ThrowsAsync<WiseRateLimitException>(() => api.ListAsync(CancellationToken.None));
+
+        Assert.Equal(TimeSpan.Zero, ex.RetryAfter);
+    }
+
+    [Fact]
+    public async Task GetRawAsync_disposes_the_response_when_the_call_fails()
+    {
+        var content = new TrackingContent("""{"message":"nope"}""");
+        var (http, handler) = TestHost.CreateHttpClient();
+        handler.EnqueueJson("{}", HttpStatusCode.InternalServerError, customize: response => response.Content = content);
+
+        await Assert.ThrowsAsync<WiseApiException>(() => http.GetRawAsync("/v1/raw", headers: null, CancellationToken.None));
+
+        Assert.True(content.Disposed);
+    }
+
+    [Fact]
     public async Task Surfaces_sca_challenge_from_403_with_one_time_token()
     {
         var (http, handler) = TestHost.CreateHttpClient();
@@ -84,5 +127,16 @@ public sealed class ErrorHandlingTests
 
         Assert.Equal("corr-1", ex.CorrelationId);
         Assert.Equal("trace-1", ex.TraceId);
+    }
+
+    private sealed class TrackingContent(string body) : StringContent(body)
+    {
+        public bool Disposed { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            Disposed = true;
+            base.Dispose(disposing);
+        }
     }
 }

@@ -6,7 +6,9 @@ namespace WiseApi.Client.Services;
 public interface IQuotesApi
 {
     /// <summary>
-    /// Create a quote. For balance-to-balance conversions, set <c>payOut</c> to <c>"BALANCE"</c>.
+    /// Create a quote. Set exactly one of <see cref="CreateQuoteRequest.SourceAmount"/> or
+    /// <see cref="CreateQuoteRequest.TargetAmount"/>. For balance-to-balance conversions, set
+    /// <c>payOut</c> to <c>"BALANCE"</c>.
     /// </summary>
     Task<Quote> CreateAsync(long profileId, CreateQuoteRequest request, CancellationToken cancellationToken = default);
 

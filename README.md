@@ -137,7 +137,10 @@ them — forward those to Wise Support tickets for faster triage.
 
 `POST` endpoints that Wise declares idempotent (`/v4/.../balances`,
 `/v2/.../balance-movements`) auto-generate an `X-idempotence-uuid` header on every
-call. Override it per-call when you need to retry the exact same operation:
+call. Override it per-call when you need to retry the exact same operation. An
+`HttpClient` timeout surfaces as `TaskCanceledException` (with an inner
+`TimeoutException`), not `HttpRequestException`, and is the case where the outcome
+is most uncertain:
 
 ```csharp
 var key = Guid.NewGuid();
@@ -145,7 +148,7 @@ try
 {
     return await wise.BalanceMovements.ConvertAsync(profileId, quoteId, idempotencyKey: key);
 }
-catch (HttpRequestException)
+catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException { InnerException: TimeoutException })
 {
     return await wise.BalanceMovements.ConvertAsync(profileId, quoteId, idempotencyKey: key); // safe retry
 }

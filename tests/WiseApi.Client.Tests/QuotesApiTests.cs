@@ -70,6 +70,23 @@ public sealed class QuotesApiTests
     }
 
     [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public async Task CreateAsync_requires_exactly_one_amount(bool withSource, bool withTarget)
+    {
+        var (http, handler) = TestHost.CreateHttpClient();
+        var api = new QuotesApi(http);
+        var request = new CreateQuoteRequest(
+            "GBP",
+            "USD",
+            SourceAmount: withSource ? 100m : null,
+            TargetAmount: withTarget ? 100m : null);
+
+        await Assert.ThrowsAsync<ArgumentException>(() => api.CreateAsync(101, request, CancellationToken.None));
+        Assert.Empty(handler.Requests);
+    }
+
+    [Theory]
     [InlineData(""","targetAmount":null""")]
     [InlineData("")]
     public async Task GetAsync_reads_null_or_omitted_amount_as_null(string targetAmountMember)
