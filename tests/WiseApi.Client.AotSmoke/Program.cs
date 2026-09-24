@@ -36,7 +36,7 @@ var wise = provider.GetRequiredService<IWiseClient>();
 var ct = CancellationToken.None;
 
 var profiles = await wise.Profiles.ListAsync(ct).ConfigureAwait(false);
-Check(profiles is [PersonalProfile { FirstName: "Ada" }, BusinessProfile { BusinessName: "Acme" }], "polymorphic profile list");
+Check(profiles is [PersonalProfile { FirstName: "Ada" }, BusinessProfile { BusinessName: "Acme" }], "polymorphic profile list, discriminator not first");
 Check(profiles[0].CurrentState == ProfileState.Unknown, "unrecognised enum value reads as Unknown");
 Check(stub.LastAuthorization == "Bearer smoke-token", "client_credentials token exchanged and applied");
 
@@ -108,7 +108,7 @@ internal sealed class CannedWise : HttpMessageHandler
         var (status, json) = (request.Method.Method, request.RequestUri.AbsolutePath) switch
         {
             ("POST", "/oauth/token") => (HttpStatusCode.OK, """{"access_token":"smoke-token","token_type":"bearer","expires_in":43199,"scope":"transfers","expires_at":"2026-05-06T00:57:28.213Z"}"""),
-            ("GET", "/v2/profiles") => (HttpStatusCode.OK, """[{"type":"PERSONAL","id":1,"userId":2,"firstName":"Ada","currentState":"ARCHIVED","createdAt":"2023-01-15T10:30:00"},{"type":"BUSINESS","id":3,"userId":2,"businessName":"Acme","currentState":"VISIBLE"}]"""),
+            ("GET", "/v2/profiles") => (HttpStatusCode.OK, """[{"type":"PERSONAL","id":1,"userId":2,"firstName":"Ada","currentState":"ARCHIVED","createdAt":"2023-01-15T10:30:00"},{"id":3,"userId":2,"type":"BUSINESS","businessName":"Acme","currentState":"VISIBLE"}]"""),
             ("GET", "/v2/profiles/404") => (HttpStatusCode.NotFound, """{"errors":[{"code":"profile.not.found","message":"Profile not found"}]}"""),
             ("GET", "/v4/profiles/1/multi-currency-account") => (HttpStatusCode.OK, """{"id":9,"profileId":1,"recipientId":5,"creationTime":"2023-01-15T10:30:00Z","active":true,"eligible":true}"""),
             ("GET", "/v4/multi-currency-account/eligibility") => (HttpStatusCode.OK, """{"eligible":true,"eligibilityCode":"eligible","accountType":"RECEIVE_ONLY","ineligibilityReason":null}"""),

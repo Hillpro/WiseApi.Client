@@ -124,7 +124,7 @@ All non-2xx responses throw `WiseApiException`. Two specific subclasses surface
 important behaviours:
 
 - `WiseRateLimitException` — 429 with `RetryAfter` populated from the header.
-- `WiseScaChallengeException` — 403 with an `x-2fa-approval` header. Wise is
+- `WiseScaChallengeException` — 403 with an `X-2FA-Approval` header. Wise is
   requesting Strong Customer Authentication (challenge-clearing via the OTT
   framework). The library surfaces the one-time token on the exception so
   you can clear the challenge and retry; an in-library retry handler is

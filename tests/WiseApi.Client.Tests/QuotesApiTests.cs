@@ -68,4 +68,31 @@ public sealed class QuotesApiTests
         Assert.Equal(HttpMethod.Get, request.Method);
         Assert.Equal("/v3/profiles/101/quotes/11144c35-9fe8-4c32-b7fd-d05c2a7734bf", request.Uri.AbsolutePath);
     }
+
+    [Theory]
+    [InlineData(""","targetAmount":null""")]
+    [InlineData("")]
+    public async Task GetAsync_reads_null_or_omitted_amount_as_null(string targetAmountMember)
+    {
+        var body = $$"""
+        {
+          "id": "11144c35-9fe8-4c32-b7fd-d05c2a7734bf",
+          "sourceCurrency": "GBP",
+          "targetCurrency": "USD",
+          "sourceAmount": 100,
+          "payOut": "BALANCE",
+          "rate": 1.30445,
+          "user": 55,
+          "profile": 101{{targetAmountMember}}
+        }
+        """;
+        var (http, handler) = TestHost.CreateHttpClient();
+        handler.EnqueueJson(body);
+        var api = new QuotesApi(http);
+
+        var quote = await api.GetAsync(profileId: 101, Guid.Parse("11144c35-9fe8-4c32-b7fd-d05c2a7734bf"), CancellationToken.None);
+
+        Assert.Equal(100m, quote.SourceAmount);
+        Assert.Null(quote.TargetAmount);
+    }
 }

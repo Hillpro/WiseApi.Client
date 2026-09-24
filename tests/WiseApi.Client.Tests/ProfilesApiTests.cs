@@ -72,4 +72,18 @@ public sealed class ProfilesApiTests
         Assert.Equal("Ada", personal.FirstName);
         Assert.Equal("/v2/profiles/42", Assert.Single(handler.Requests).Uri.AbsolutePath);
     }
+
+    [Fact]
+    public async Task GetAsync_accepts_type_discriminator_after_other_properties()
+    {
+        var (http, handler) = TestHost.CreateHttpClient();
+        handler.EnqueueJson("""{"id":42,"userId":7,"type":"BUSINESS","businessName":"Acme"}""");
+        var api = new ProfilesApi(http);
+
+        var profile = await api.GetAsync(42, CancellationToken.None);
+
+        var business = Assert.IsType<BusinessProfile>(profile);
+        Assert.Equal(42L, business.Id);
+        Assert.Equal("Acme", business.BusinessName);
+    }
 }

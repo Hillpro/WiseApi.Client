@@ -20,6 +20,7 @@ namespace WiseApi.Client.Serialization;
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     ReadCommentHandling = JsonCommentHandling.Skip,
     AllowTrailingCommas = true,
+    AllowOutOfOrderMetadataProperties = true,
     Converters = [typeof(LenientDateTimeOffsetConverter)])]
 [JsonSerializable(typeof(Profile))]
 [JsonSerializable(typeof(IReadOnlyList<Profile>))]

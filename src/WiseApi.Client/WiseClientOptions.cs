@@ -82,7 +82,10 @@ public sealed class WiseClientOptions
     /// </summary>
     public bool AutoCorrelationId { get; set; } = true;
 
-    /// <summary>Default per-request timeout. Only used by the non-DI <see cref="WiseClient.Create(WiseClientOptions)"/> factory.</summary>
+    /// <summary>
+    /// Timeout applied to the underlying <see cref="HttpClient"/>, both by <c>services.AddWiseClient(...)</c>
+    /// and by <see cref="WiseClient.Create(WiseClientOptions)"/>.
+    /// </summary>
     public TimeSpan Timeout { get; set; } = TimeSpan.FromSeconds(100);
 
     internal Uri ResolveBaseAddress() => BaseAddress ?? Environment.BaseAddress();

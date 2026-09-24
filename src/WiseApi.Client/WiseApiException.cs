@@ -73,9 +73,10 @@ public sealed class WiseRateLimitException : WiseApiException
 
 /// <summary>
 /// Thrown when Wise requires Strong Customer Authentication (SCA): HTTP 403 with an
-/// <c>X-2FA-Approval</c> challenge header. Signing is not yet implemented — see the
-/// Wise SCA guide to configure an approval key, then intercept this exception to re-issue the
-/// request with <c>X-2FA-Approval</c> and <c>X-Signature</c> headers.
+/// <c>X-2FA-Approval</c> one-time token (OTT). Clearing the challenge is not yet implemented —
+/// complete the required challenges for <see cref="OneTimeToken"/> through Wise's one-time-token
+/// endpoints (see the Wise "SCA over API" guide), then replay the original request with an
+/// <c>X-2FA-Approval</c> header set to the cleared token.
 /// </summary>
 public sealed class WiseScaChallengeException : WiseApiException
 {
@@ -91,8 +92,8 @@ public sealed class WiseScaChallengeException : WiseApiException
         string? httpMethod = null,
         Uri? requestUri = null)
         : base(
-            "Wise returned an SCA challenge. The endpoint requires a signed X-Signature header. " +
-            "This client does not yet sign SCA challenges — see WiseApi.Client documentation.",
+            "Wise returned an SCA challenge. Clear the challenges for the one-time token, then replay " +
+            "the request with an X-2FA-Approval header. This client does not yet clear SCA challenges.",
             HttpStatusCode.Forbidden,
             errors: null, rawBody, correlationId, traceId, retryAfter: null, httpMethod, requestUri)
     {

@@ -75,8 +75,9 @@ auth modes, no SCA.
 
 ### Current state
 
-The client surfaces the SCA challenge as `WiseScaChallengeException`
-(populated with the `x-2fa-approval` OTT and `x-2fa-approval-result: REJECTED`).
+The client surfaces the SCA challenge as `WiseScaChallengeException`, carrying
+the `X-2FA-Approval` OTT as `OneTimeToken` (`X-2FA-Approval-Result` is not
+captured yet — see the minimal SCA surface below).
 Consumers can catch it, but the client does nothing to clear the challenge —
 the caller has to handle SCA out-of-band.
 
@@ -92,7 +93,7 @@ The real flow (see
 <https://docs.wise.com/guides/developer/auth-and-security/one-time-token>):
 
 1. Protected endpoint returns `403 Forbidden` with
-   `x-2fa-approval-result: REJECTED` and `x-2fa-approval: <OTT>`.
+   `X-2FA-Approval-Result: REJECTED` and `X-2FA-Approval: <OTT>`.
 2. Caller lists required challenges via
    `GET /v1/one-time-token/status` (header: `One-Time-Token: <OTT>`).
 3. Caller clears **at least two** challenges. Primary challenge types:
@@ -112,8 +113,8 @@ The real flow (see
    - Sign request, encrypt with Wise's key, send, decrypt+verify response.
 
 4. Once two challenges are passed, replay the **original** request with
-   `x-2fa-approval: <cleared-OTT>` — no `X-Signature` header involved.
-   Success returns `x-2fa-approval-result: APPROVED`.
+   `X-2FA-Approval: <cleared-OTT>` — no `X-Signature` header involved.
+   Success returns `X-2FA-Approval-Result: APPROVED`.
 
 Low-risk operations honour a 5-minute SCA session after one clearance; for
 MCA the realistic first user is balance statements (see §4) and transfer
@@ -142,9 +143,9 @@ detection and replay; consumers handle the challenge-clearing themselves
   backend that performs SCA, a human-in-the-loop console, a test stub, …
 
 - Add `WiseScaRetryHandler` `DelegatingHandler`: on 403 +
-  `x-2fa-approval-result: REJECTED`, invoke the configured
+  `X-2FA-Approval-Result: REJECTED`, invoke the configured
   `IScaChallengeHandler`, then replay the request once with
-  `x-2fa-approval: <OTT>` added. If no handler is configured or the handler
+  `X-2FA-Approval: <OTT>` added. If no handler is configured or the handler
   returns `null`, preserve today's behaviour and throw
   `WiseScaChallengeException`.
 - Wire via `WiseClientOptions.ScaChallengeHandler`; place handler outermost

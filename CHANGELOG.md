@@ -15,6 +15,10 @@ All notable changes to this project are documented here. Format based on
 ### Fixed
 - Unrecognised, missing or `null` enum values in responses now read as
   `Unknown` instead of throwing or defaulting to a real value.
+- Profiles deserialize wherever Wise places the `type` field, not only when it
+  comes first.
+- `WiseScaChallengeException` now describes Wise's current one-time-token flow
+  instead of asking for an `X-Signature` header.
 
 ### Changed
 - **Breaking.** `Unknown` is now the first member (value `0`) of every
@@ -22,6 +26,8 @@ All notable changes to this project are documented here. Format based on
 - **Breaking.** `WiseJsonDefaults.Options` is now a property. It and the
   `WiseHttpClient` overloads without a `JsonTypeInfo<T>` are flagged as not
   AOT-safe. Pass `headers:` by name; a positional `null` is now ambiguous.
+- **Breaking.** `Quote.SourceAmount` and `Quote.TargetAmount` are now `decimal?`.
+  A missing amount used to read as `0`, and a `null` one threw.
 
 ## [0.3.1] — 2026-04-18
 
